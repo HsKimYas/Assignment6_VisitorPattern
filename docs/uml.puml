@@ -1,0 +1,106 @@
+@startuml
+' Standalone PlantUML source. Every visible relationship is labeled.
+top to bottom direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 11
+skinparam ArrowFontSize 11
+skinparam ArrowColor #475569
+skinparam nodesep 24
+skinparam ranksep 38
+skinparam linetype polyline
+skinparam class {
+  BackgroundColor white
+  HeaderBackgroundColor #E9EEF5
+  BorderColor #334155
+  FontColor #111827
+}
+hide circle
+hide empty members
+
+interface Element {
+  + accept(Visitor): void
+}
+
+abstract class FileSystemNode <<sealed>> {
+  - name: String
+  - parent: DirectoryNode
+  --
+  {abstract} + getChildren(): List<FileSystemNode>
+}
+
+class FileNode {
+  - size: long
+  --
+  + getSize(): long
+  + accept(Visitor): void
+}
+
+class DirectoryNode {
+  - children: Map<String, FileSystemNode>
+  --
+  + addChild(FileSystemNode): void
+  + removeChild(String): FileSystemNode
+  + accept(Visitor): void
+}
+
+class FileSystemWalker {
+  {static} + walk(FileSystemNode, Visitor): void
+}
+
+interface Visitor {
+  + visit(FileNode): void
+  + visit(DirectoryNode): void
+  + reset(): void
+  + setContext(VisitContext): void
+}
+
+class TotalSizeVisitor {
+  - totalSize: long
+  --
+  + getTotalSize(): long
+}
+
+class SearchVisitor {
+  - filenameCriterion: Predicate<String>
+  - minimumSize: long
+  - matches: List<String>
+  --
+  + getMatches(): List<String>
+}
+
+class StatisticsVisitor {
+  - fileCount: long
+  - directoryCount: long
+  - maxDepth: int
+  --
+  + getStatistics(): Statistics
+}
+
+' Realization and inheritance: the hollow triangle points to the contract/base.
+Element <|.. FileSystemNode : implements
+FileSystemNode <|-- FileNode : extends
+FileSystemNode <|-- DirectoryNode : extends
+Visitor <|.. TotalSizeVisitor : implements
+Visitor <|.. SearchVisitor : implements
+Visitor <|.. StatisticsVisitor : implements
+
+' The composition diamond is at the owning directory.
+DirectoryNode "0..1" *-up- "0..*" FileSystemNode : owns children
+
+' Dependencies expose dispatch and traversal responsibilities.
+' Two trailing line breaks keep the upper arc below its relationship label.
+Element .right.> Visitor : accepts visitor\n\n
+FileSystemWalker .down.> FileSystemNode : traverses
+FileSystemWalker .right.> Visitor : resets /\nsupplies context
+FileSystemWalker .down.> Element : calls accept
+
+' Invisible constraints affect layout only; they are not UML relationships.
+Element -[hidden]right- FileSystemWalker
+FileSystemWalker -[hidden]right- Visitor
+TotalSizeVisitor -[hidden]down- StatisticsVisitor
+SearchVisitor -[hidden]down- StatisticsVisitor
+
+@enduml

@@ -1,0 +1,9 @@
+Visitor Pattern - In-Memory File System
+Root: workspace
+Total size: 8500 bytes
+Search: filename ends with ".java", size >= 800 bytes
+Matches (2):
+  src/Main.java
+  src/model/DirectoryNode.java
+Statistics: files=9, directories=7, maximumDepth=3
+Repeated total size: 8500 bytes
